@@ -1,0 +1,8 @@
+---
+# playbook.yml file.
+- hosts: all
+  user: root
+  become: true
+  become_user: root
+  roles:
+    - mysql

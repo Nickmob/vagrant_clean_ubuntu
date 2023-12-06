@@ -1,0 +1,60 @@
+---
+- name: "Disable local mysql repo RedHat/CentOS/Rocky >= 8.0)"
+  command: "dnf module disable mysql -y"
+  when:
+    - ansible_distribution_major_version|int == 8
+    - install_rpm_repositories|bool
+
+- name: "Remove mariadb-connector-c-config (RedHat/CentOS/Rocky >= 8.0)"
+  yum:
+    name:
+      - "mariadb-connector-c-config"
+    state: absent
+  when:
+    - ansible_distribution_version is version_compare('8.0', '>=')
+
+- name: "Install Percona RPM GPG KEY"
+  rpm_key:
+    state: present
+    key: https://www.percona.com/downloads/RPM-GPG-KEY-percona
+  when: install_rpm_repositories|bool
+
+- name: "Add Percona yum repository"
+  yum:
+    name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    state: present
+  when: install_rpm_repositories|bool
+
+# https://www.percona.com/doc/percona-server/LATEST/installation/yum_repo.html
+- name: "Enable Percona repository (Percona version >= 8)"
+  command: "percona-release setup ps{{ mysql_version_major }}{{ mysql_version_minor }} -y"
+  when: mysql_version_major|int >= 8 and install_rpm_repositories|bool
+  changed_when: False     # TODO: check for task idempotency
+
+- name: "Enable Percona toolkit (RH/CentOS/Rocky >= 8.0)"
+  command: "percona-release enable tools"
+  when:
+    - install_rpm_repositories|bool
+    - ansible_distribution_version is version_compare('8.0', '>=')
+
+- name: "Install MySQL-python package (ansible python2)"
+  yum:
+    name: "MySQL-python"
+    state: present
+  when:
+    - ansible_python.version.major == 2     # version is a number, do not quote
+
+- name: "Install MySQL-python package (ansible python3)"
+  yum:
+    name: "python3-PyMySQL"
+    state: present
+  when:
+    - ansible_python.version.major == 3     # version is a number, do not quote
+
+- name: "Adjust permissions of datadir"
+  file:
+    path: "{{ mysql_datadir }}"
+    owner: "mysql"
+    group: "mysql"
+    mode: 0755
+    state: "directory"

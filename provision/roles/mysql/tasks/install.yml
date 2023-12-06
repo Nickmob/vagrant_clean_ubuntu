@@ -1,0 +1,14 @@
+---
+
+- name: "Update apt cache"
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: "Install mysql-server 8.0 package"
+  apt:
+    name:
+      - "mysql-server-8.0"
+      - mc
+      - nano
+    state: "present"
