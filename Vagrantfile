@@ -1,12 +1,12 @@
 ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
 
+
 Vagrant.configure(2) do |config|
 
     N = 2
     (1..N).each do |i|
       config.vm.define "host#{i}" do |node|
         node.vm.box = "ubuntu/jammy64"
-        node.vbguest.installer_options = { allow_kernel_upgrade: true }
         node.vm.synced_folder ".", "/vagrant"
         #node.vm.synced_folder ".", "/vagrant", disabled: true
         node.vm.hostname = "host#{i}"
